@@ -37,11 +37,10 @@ class Board
 
 		inline bool isEmpty(U8 sq) { return board[sq] == 0; }
 		inline void moveTile(U8 sSq, U8 tSq) { board[tSq] = board[sSq]; board[sSq] = 0; }
-		inline void moveIfAble(U8 sSq, U8 tSq) { if (isEmpty(sSq)) moveTile(sSq, tSq); }
+		inline void moveIfAble(U8 sSq, U8 tSq) { if (isEmpty(tSq)) moveTile(sSq, tSq); }
 		inline bool isMergeable(U8 sSq, U8 tSq) { return (board[sSq] == board[tSq]) * board[sSq]; }
 		inline void mergeTiles(U8 sSq, U8 tSq) { board[tSq]++; board[sSq] = 0; }
-		inline void mergeIfAbleAP(U8 sSq, U8 tSq, U8& sq) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq++; } }
-		inline void mergeIfAbleAM(U8 sSq, U8 tSq, U8& sq) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq--; } }
+		inline void mergeIfAbleAA(U8 sSq, U8 tSq, U8& sq, S8 num) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq += num; } }
 
 		void moveUp();
 		void moveDown();
@@ -58,7 +57,7 @@ class Board
 		static inline constexpr U8 getSqCol(U8 index) { return index / 4; }
 
 		void move(U8 moveType);
-		inline void unMove() { history.pop_back(); }
+		inline void unMove() { history.pop_back(); board = &history.back()[0]; }
 
 		void print();
 

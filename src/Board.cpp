@@ -24,59 +24,25 @@ std::vector<U8> Board::getEmptySquares()
 void Board::moveUp()
 {
 	for (U8 sq = A1; sq < D1; sq++)
-	{
-		if (board[sq + 4] == 0)
-		{
-			board[sq + 4] = board[sq];
-			board[sq] = 0;
-		}
-	}
+		moveIfAble(sq, sq + 4);
+
 	for (U8 sq = A1; sq < D1; sq++)
-	{
-		if (board[sq + 4] != 0 && board[sq + 4] == board[sq])
-		{
-			board[sq + 4]++;
-			board[sq] = 0;
-			sq++;
-		}
-	}
+		mergeIfAbleAA(sq, sq + 4, sq, 1);
+
 	for (U8 sq = A1; sq < D1; sq++)
-	{
-		if (board[sq + 4] == 0)
-		{
-			board[sq + 4] = board[sq];
-			board[sq] = 0;
-		}
-	}
+		moveIfAble(sq, sq + 4);
 }
 
 void Board::moveDown()
 {
 	for (U8 sq = D4; sq > A4; sq--)
-	{
-		if (board[sq - 4] == 0)
-		{
-			board[sq - 4] = board[sq];
-			board[sq] = 0;
-		}
-	}
+		moveIfAble(sq, sq - 4);
+
 	for (U8 sq = D4; sq > A4; sq--)
-	{
-		if (board[sq - 4] != 0 && board[sq - 4] == board[sq])
-		{
-			board[sq - 4]++;
-			board[sq] = 0;
-			sq--;
-		}
-	}
+		mergeIfAbleAA(sq, sq - 4, sq, -1);
+
 	for (U8 sq = D4; sq > A4; sq--)
-	{
-		if (board[sq - 4] == 0)
-		{
-			board[sq - 4] = board[sq];
-			board[sq] = 0;
-		}
-	}
+		moveIfAble(sq, sq - 4);
 }
 
 void Board::moveLeft()
@@ -87,14 +53,7 @@ void Board::moveLeft()
 			moveIfAble(sq, sq + 1);
 
 		for (U8 sq = bsq; sq < bsq + 3; sq++)
-		{
-			if (board[sq] != 0 && board[sq] == board[sq + 1])
-			{
-				board[sq]++;
-				board[sq + 1] = 0;
-				sq++;
-			}
-		}
+			mergeIfAbleAA(sq + 1, sq, sq, 1);
 
 		for (U8 sq = bsq; sq < bsq + 3; sq++)
 			moveIfAble(sq, sq + 1);
@@ -109,7 +68,7 @@ void Board::moveRight()
 			moveIfAble(sq - 1, sq);
 
 		for (U8 sq = bsq; sq > bsq - 3; sq--)
-			mergeIfAbleAP(sq - 1, sq, sq);
+			mergeIfAbleAA(sq - 1, sq, sq, -1);
 
 		for (U8 sq = bsq; sq > bsq - 3; sq--)
 			moveIfAble(sq - 1, sq);
@@ -160,10 +119,5 @@ void Board::print()
 
 void Board::test()
 {
-	print();
-	for (U8 x = 0; x < 30; x++)
-	{
-		move(RIGHT);
-		print();
-	}
+
 }
