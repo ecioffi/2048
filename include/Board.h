@@ -35,8 +35,13 @@ class Board
 
 		std::vector<U8> getEmptySquares();
 
-		inline U8 Board::getNextEmptySqP(U8 index) { for (; index; index++) { } return index; }
-		inline U8 Board::getNextEmptySqM(U8 index) { for (; index; index--) { } return index; }
+		inline bool isEmpty(U8 sq) { return board[sq] == 0; }
+		inline void moveTile(U8 sSq, U8 tSq) { board[tSq] = board[sSq]; board[sSq] = 0; }
+		inline void moveIfAble(U8 sSq, U8 tSq) { if (isEmpty(sSq)) moveTile(sSq, tSq); }
+		inline bool isMergeable(U8 sSq, U8 tSq) { return (board[sSq] == board[tSq]) * board[sSq]; }
+		inline void mergeTiles(U8 sSq, U8 tSq) { board[tSq]++; board[sSq] = 0; }
+		inline void mergeIfAbleAP(U8 sSq, U8 tSq, U8& sq) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq++; } }
+		inline void mergeIfAbleAM(U8 sSq, U8 tSq, U8& sq) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq--; } }
 
 		void moveUp();
 		void moveDown();
@@ -51,9 +56,6 @@ class Board
 		static inline constexpr U8 getSqIndex(U8 row, U8 col) { return (col * 4) + row; }
 		static inline constexpr U8 getSqRow(U8 index) { return index % 4; }
 		static inline constexpr U8 getSqCol(U8 index) { return index / 4; }
-
-		inline bool isEmpty(U8 row, U8 col) { return !board[getSqIndex(row, col)]; }
-		inline bool isEmpty(U8 index) { return !board[index]; }
 
 		void move(U8 moveType);
 		inline void unMove() { history.pop_back(); }

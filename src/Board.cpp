@@ -25,22 +25,27 @@ void Board::moveUp()
 {
 	for (U8 sq = A1; sq < D1; sq++)
 	{
-		bool okToMerge = true;
 		if (board[sq + 4] == 0)
 		{
 			board[sq + 4] = board[sq];
 			board[sq] = 0;
-			okToMerge = true;
 		}
-		else if (board[sq + 4] == board[sq] && okToMerge)
+	}
+	for (U8 sq = A1; sq < D1; sq++)
+	{
+		if (board[sq + 4] != 0 && board[sq + 4] == board[sq])
 		{
 			board[sq + 4]++;
 			board[sq] = 0;
-			okToMerge = false;
+			sq++;
 		}
-		else
+	}
+	for (U8 sq = A1; sq < D1; sq++)
+	{
+		if (board[sq + 4] == 0)
 		{
-			okToMerge = true;
+			board[sq + 4] = board[sq];
+			board[sq] = 0;
 		}
 	}
 }
@@ -49,71 +54,65 @@ void Board::moveDown()
 {
 	for (U8 sq = D4; sq > A4; sq--)
 	{
-		bool okToMerge = true;
 		if (board[sq - 4] == 0)
 		{
 			board[sq - 4] = board[sq];
 			board[sq] = 0;
-			okToMerge = true;
 		}
-		else if (board[sq - 4] == board[sq] && okToMerge)
+	}
+	for (U8 sq = D4; sq > A4; sq--)
+	{
+		if (board[sq - 4] != 0 && board[sq - 4] == board[sq])
 		{
 			board[sq - 4]++;
 			board[sq] = 0;
-			okToMerge = false;
+			sq--;
 		}
-		else
+	}
+	for (U8 sq = D4; sq > A4; sq--)
+	{
+		if (board[sq - 4] == 0)
 		{
-			okToMerge = true;
+			board[sq - 4] = board[sq];
+			board[sq] = 0;
 		}
 	}
 }
 
 void Board::moveLeft()
 {
-	for (U8 bsq = D4; bsq < (D4 + 1); bsq -= 4)
+	for (U8 bsq = A1; bsq < D4; bsq += 4)
 	{
-		for (U8 sq = bsq; sq > bsq - 3; sq--)
+		for (U8 sq = bsq; sq < bsq + 3; sq++)
+			moveIfAble(sq, sq + 1);
+
+		for (U8 sq = bsq; sq < bsq + 3; sq++)
 		{
-			if (board[sq - 1] == 0)
+			if (board[sq] != 0 && board[sq] == board[sq + 1])
 			{
-				board[sq - 1] = board[sq];
-				board[sq] = 0;
-			}
-			else if (board[sq - 1] != 0 && board[sq - 1] == board[sq])
-			{
-				board[sq - 1]++;
-				board[sq] = 0;
-				sq--;
+				board[sq]++;
+				board[sq + 1] = 0;
+				sq++;
 			}
 		}
+
+		for (U8 sq = bsq; sq < bsq + 3; sq++)
+			moveIfAble(sq, sq + 1);
 	}
 }
 
 void Board::moveRight()
 {
-	for (U8 bsq = A1; bsq < D4; bsq += 4)
+	for (U8 bsq = D4; bsq < D4 + 1; bsq -= 4)
 	{
-		bool okToMerge = true;
-		for (U8 sq = bsq; sq < bsq + 3; sq++)
-		{
-			if (board[sq + 1] == 0)
-			{
-				board[sq + 1] = board[sq];
-				board[sq] = 0;
-				okToMerge = true;
-			}
-			else if (board[sq + 1] == board[sq] && okToMerge)
-			{
-				board[sq + 1]++;
-				board[sq] = 0;
-				okToMerge = false;
-			}
-			else
-			{
-				okToMerge = true;
-			}
-		}
+		for (U8 sq = bsq; sq > bsq - 3; sq--)
+			moveIfAble(sq - 1, sq);
+
+		for (U8 sq = bsq; sq > bsq - 3; sq--)
+			mergeIfAbleAP(sq - 1, sq, sq);
+
+		for (U8 sq = bsq; sq > bsq - 3; sq--)
+			moveIfAble(sq - 1, sq);
 	}
 }
 
@@ -162,10 +161,9 @@ void Board::print()
 void Board::test()
 {
 	print();
-
 	for (U8 x = 0; x < 30; x++)
 	{
-		move(LEFT);
+		move(RIGHT);
 		print();
 	}
 }
