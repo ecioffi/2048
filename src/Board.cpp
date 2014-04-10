@@ -11,14 +11,19 @@ std::vector<U8> Board::getEmptySquares()
 	squares.reserve(16);
 
 	for (U8 index = 0; index < 16; index++)
-	{
-		if (!board[index])
-		{
+		if (board[index] == 0)
 			squares.push_back(index);
-		}
-	}
+
 	squares.shrink_to_fit();
 	return squares;
+}
+
+U8 Board::getHighestTile()
+{
+	U8 highestTile = 0;
+	for (U8 index = 0; index < 16; index++)
+		highestTile = std::max(highestTile, board[index]);
+	return highestTile;
 }
 
 void Board::moveUp()
@@ -81,10 +86,8 @@ void Board::putNewTile()
 	board[emptySquares[distribution(engine) % emptySquares.size()]] = getNewTile();
 }
 
-void Board::move(U8 moveType)
+void Board::doMove(U8 moveType)
 {
-	history.push_back(history.back());
-	board = &history.back()[0];
 	switch (moveType)
 	{
 		case UP:
@@ -100,7 +103,75 @@ void Board::move(U8 moveType)
 			moveRight();
 			break;
 	}
+}
+
+bool Board::canMove(U8 moveType)
+{
+	history.push_back(history.back());
+	doMove(moveType);
+	updateBoardPointer();
+	if (isEqual(getPreviousBoard(), board))
+	{
+		unMove();
+		return false;
+	}
+
+	unMove();
+	return true;
+}
+
+std::vector<U8> Board::getAllMoves()
+{
+	std::vector<U8> moves;
+	for (U8 move = UP; move <= RIGHT; move++)
+		if (canMove(move))
+			moves.push_back(move);
+	return moves;
+}
+
+void Board::move(U8 moveType)
+{
+	history.push_back(history.back());
+	updateBoardPointer();
+
+	doMove(moveType);
 	putNewTile();
+}
+
+bool Board::isFullBoard()
+{
+	for (U8 index = 0; index < 16; index++)
+		if (board[index] == 0)
+			return false;
+
+	return true;
+}
+
+bool Board::areNoMerges()
+{
+	for (U8 sq = A1; sq < D1; sq++)
+		if (isMergeable(sq, sq + 4))
+			return false;
+
+	for (U8 sq = D4; sq > A4; sq--)
+		if (isMergeable(sq, sq - 4))
+			return false;
+
+	for (U8 bsq = A1; bsq < D4; bsq += 4)
+	{
+		for (U8 sq = bsq; sq < bsq + 3; sq++)
+			if (isMergeable(sq + 1, sq))
+				return false;
+	}
+
+	for (U8 bsq = D4; bsq < D4 + 1; bsq -= 4)
+	{
+		for (U8 sq = bsq; sq > bsq - 3; sq--)
+			if (isMergeable(sq - 1, sq))
+				return false;
+	}
+
+	return true;
 }
 
 void Board::print()
@@ -115,9 +186,4 @@ void Board::print()
 		std::cout << "|\n";
 	}
 	std::cout << "+----+----+----+----+\n" << std::endl;
-}
-
-void Board::test()
-{
-
 }
