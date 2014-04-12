@@ -67,7 +67,7 @@ void Board::moveLeft()
 
 void Board::moveRight()
 {
-	for (U8 bsq = D4; bsq < D4 + 1; bsq -= 4)
+	for (U8 bsq = D4; bsq < NO_SQ; bsq -= 4)
 	{
 		for (U8 sq = bsq; sq > bsq - 3; sq--)
 			moveIfAble(sq - 1, sq);
@@ -80,62 +80,35 @@ void Board::moveRight()
 	}
 }
 
-void Board::putNewTile()
+void Board::respond()
 {
 	std::vector<U8> emptySquares = getEmptySquares();
 	board[emptySquares[distribution(engine) % emptySquares.size()]] = getNewTile();
 }
 
-void Board::doMove(U8 moveType)
+void Board::doMove(Move move)
 {
-	switch (moveType)
+	switch (move)
 	{
-		case UP:
+		case Move::Up:
 			moveUp();
 			break;
-		case DOWN:
+		case Move::Down:
 			moveDown();
 			break;
-		case LEFT:
+		case Move::Left:
 			moveLeft();
 			break;
-		case RIGHT:
+		case Move::Right:
 			moveRight();
 			break;
 	}
 }
 
-bool Board::canMove(U8 moveType)
+void Board::move(Move move)
 {
-	history.push_back(history.back());
-	doMove(moveType);
-	updateBoardPointer();
-	if (isEqual(getPreviousBoard(), board))
-	{
-		unMove();
-		return false;
-	}
-
-	unMove();
-	return true;
-}
-
-std::vector<U8> Board::getAllMoves()
-{
-	std::vector<U8> moves;
-	for (U8 move = UP; move <= RIGHT; move++)
-		if (canMove(move))
-			moves.push_back(move);
-	return moves;
-}
-
-void Board::move(U8 moveType)
-{
-	history.push_back(history.back());
-	updateBoardPointer();
-
-	doMove(moveType);
-	putNewTile();
+	doMove(move);
+	respond();
 }
 
 bool Board::isFullBoard()
@@ -164,7 +137,7 @@ bool Board::areNoMerges()
 				return false;
 	}
 
-	for (U8 bsq = D4; bsq < D4 + 1; bsq -= 4)
+	for (U8 bsq = D4; bsq < NO_SQ; bsq -= 4)
 	{
 		for (U8 sq = bsq; sq > bsq - 3; sq--)
 			if (isMergeable(sq - 1, sq))

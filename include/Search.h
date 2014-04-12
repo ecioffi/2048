@@ -10,13 +10,13 @@ class Search
 
 		U64 nodes;
 
-		S32 maxi(U8 depth);
-		S32 mini(U8 depth);
-		U32 minimax(U8 depth);
+		S32 searchResponseNode();
+		S32 searchMoveNode();
+		S32 searchRoot();
 	public:
 		Search(Board& board) : board(board) { }
 
-		U8 getBestMove(U8 depth);
+		Move getBestMove(U8 depth);
 };
 
 #endif /* SEARCH_H_ */

@@ -8,12 +8,12 @@ Search search(board);
 
 int main()
 {
-	board.print();
-	while (!(board.isDead() || board.isWon()))
-	{
-		board.move(search.getBestMove(10));
-		board.print();
-	}
+	//board.print();
+//	while (!(board.isDead() || board.isWon()))
+//	{
+//		board.move(search.getBestMove(10));
+//		//board.print();
+//	}
 
 	std::cout << (board.isWon() ? "WON" : "DEAD") << std::endl;
 }
