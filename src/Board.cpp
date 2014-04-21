@@ -80,6 +80,31 @@ void Board::moveRight()
 	}
 }
 
+std::vector<Response> Board::getAllResponses()
+{
+	std::vector<Response> responses;
+	std::vector<U8> emptySquares = getEmptySquares();
+	responses.reserve(emptySquares.size() * 2);
+
+	for (U8 sq : emptySquares)
+	{
+		responses.push_back(Response(1, sq));
+		responses.push_back(Response(2, sq));
+	}
+
+	return responses;
+}
+
+void Board::respond(Response response)
+{
+	board[response.getSquare()] = response.getTile();
+}
+
+void Board::unRespond(Response response)
+{
+	board[response.getSquare()] = 0;
+}
+
 void Board::respond()
 {
 	std::vector<U8> emptySquares = getEmptySquares();
@@ -102,16 +127,25 @@ void Board::doMove(Move move)
 		case Move::Right:
 			moveRight();
 			break;
+		case Move::NoMove:
+			break;
 	}
+}
+
+void Board::moveNR(Move move)
+{
+	history.push_back(history.back());
+	updateBoardPointer();
+	doMove(move);
 }
 
 void Board::move(Move move)
 {
-	doMove(move);
+	moveNR(move);
 	respond();
 }
 
-bool Board::isFullBoard()
+bool Board::isFull()
 {
 	for (U8 index = 0; index < 16; index++)
 		if (board[index] == 0)

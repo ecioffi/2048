@@ -3,15 +3,18 @@
 
 #include "Defs.h"
 
+class Board;
+
 class Response
 {
 	friend class Board;
 	private:
-		U8 response;
-		Response(U8 tile, U8 index) : response((index << 2) | tile) { }
+		const U8 response;
+		inline Response(U8 tile, U8 index) : response((index << 2) | tile) { }
 	public:
 		inline U8 getTile() { return response & 3; }
-		inline U8 getIndex() { return response >> 2; }
+		inline U8 getSquare() { return response >> 2; }
+		float getProbability(Board& board);
 };
 
 #endif /* RESPONSE_H_ */

@@ -1,7 +1,10 @@
 #ifndef SEARCH_H_
 #define SEARCH_H_
 
-#include "Board.h"
+#include "Defs.h"
+
+class Board;
+enum class Move : U8;
 
 class Search
 {
@@ -10,9 +13,9 @@ class Search
 
 		U64 nodes;
 
-		S32 searchResponseNode();
-		S32 searchMoveNode();
-		S32 searchRoot();
+		S32 EvNode(S8 depth);
+		S32 maxNode(S8 depth);
+		Move EvMax(S8 depth);
 	public:
 		Search(Board& board) : board(board) { }
 

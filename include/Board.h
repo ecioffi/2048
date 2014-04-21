@@ -7,13 +7,12 @@
 #include <vector>
 
 #include "Defs.h"
+#include "Response.h"
 
-enum class Move : U8 {Up, Down, Left, Right};
+enum class Move : U8 {Up, Down, Left, Right, NoMove};
 enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO_SQ};
-//enum class Actor : U8 {Player, Response, NoActor};
 
 static const constexpr Move allMoves[4] = {Move::Up, Move::Down, Move::Left, Move::Right};
-//static const constexpr Actor allActors[2] = {Actor::Player, Actor::Response};
 
 
 #define useStaleSeed__
@@ -27,6 +26,8 @@ static const constexpr Move allMoves[4] = {Move::Up, Move::Down, Move::Left, Mov
 class Board
 {
 	friend class Search;
+	friend class Response;
+
 	private:
 		std::mt19937 engine;
 		std::uniform_int_distribution<U8> tileDistribution;
@@ -35,10 +36,8 @@ class Board
 		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
 		static const constexpr char* printString[12] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048"};
 
-//		std::vector<std::vector<U8>> history = {std::vector<U8>(16)};
-//		U8* board = &history.back()[0];
-//		Actor actorTM = Actor::Player;
-		U8 board[16] = {};
+		std::vector<std::vector<U8>> history = {std::vector<U8>(16)};
+		U8* board = &history.back()[0];
 
 		std::vector<U8> getEmptySquares();
 		U8 getHighestTile();
@@ -56,15 +55,15 @@ class Board
 		void moveRight();
 
 		void doMove(Move move);
-//		inline void updateBoardPointer() { board = &history.back()[0]; }
-//		inline void flipActorTM() { actorTM = (Actor) ((U8) actorTM ^ 1_U8);  }
-//		inline U8* getPreviousBoard() { return &(*(history.rbegin() + 1))[0]; }
+		inline void updateBoardPointer() { board = &history.back()[0]; }
+
+		inline U8* getPreviousBoard() { return &(*(history.rbegin() + 1))[0]; }
 		inline bool isEqual(U8* boardA, U8* boardB) { return (((U64*) boardA)[0] == ((U64*) boardB)[0]) && (((U64*) boardA)[1] == ((U64*) boardB)[1]); }
 
 		inline U8 getNewTile() { return newTile[tileDistribution(engine)]; }
 		void respond();
 
-		bool isFullBoard();
+		bool isFull();
 		bool areNoMerges();
 	public:
 		Board() : engine(std::mt19937(seed__)), tileDistribution(std::uniform_int_distribution<U8>(0_U8, 9_U8)) { respond(); respond(); }
@@ -72,15 +71,19 @@ class Board
 		static inline constexpr U8 getSqIndex(U8 row, U8 col) { return (col * 4) + row; }
 
 		void move(Move move);
-//		inline bool isPreviousMoveIllegal() { return isEqual(getPreviousBoard(), board); }
+		inline bool wasPreviousMoveIllegal() { return isEqual(getPreviousBoard(), board); }
 
-//		inline void unMove() { history.pop_back(); updateBoardPointer(); flipActorTM(); }
+		inline void unMove() { history.pop_back(); updateBoardPointer(); }
 
-		inline S16 evaluate() { return getEmptySquares().size() + getHighestTile(); }
-		inline bool isDead() { return isFullBoard() && areNoMerges(); }
+		inline S32 evaluate() { return getEmptySquares().size() * 128 + getHighestTile(); }
+		inline bool isDead() { return isFull() && areNoMerges(); }
 		inline bool isWon() { return getHighestTile() >= 12; }
-//		inline Actor getActorTM() { return actorTM; }
-//		inline U64 movesMade() { return history.size() - 1; }
+		inline U64 movesMade() { return history.size() - 1; }
+
+		void unRespond(Response response);
+		void respond(Response response);
+		void moveNR(Move move);
+		std::vector<Response> getAllResponses();
 
 		void print();
 };

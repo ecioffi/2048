@@ -8,12 +8,16 @@ Search search(board);
 
 int main()
 {
-	//board.print();
-//	while (!(board.isDead() || board.isWon()))
-//	{
-//		board.move(search.getBestMove(10));
-//		//board.print();
-//	}
+	U64 num = 0;
+	board.print();
+	while (!(board.isDead() || board.isWon()))
+	{
+		num++;
+		Move move = search.getBestMove(6);
+		std::cout << num << std::endl;
+		board.move(move);
+		board.print();
+	}
 
 	std::cout << (board.isWon() ? "WON" : "DEAD") << std::endl;
 }
