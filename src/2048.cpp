@@ -13,7 +13,7 @@ int main()
 	while (!(board.isDead() || board.isWon()))
 	{
 		num++;
-		Move move = search.getBestMove(6);
+		Move move = search.getBestMove(5);
 		std::cout << num << std::endl;
 		board.move(move);
 		board.print();

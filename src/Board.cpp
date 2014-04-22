@@ -128,6 +128,8 @@ void Board::doMove(Move move)
 			moveRight();
 			break;
 		case Move::NoMove:
+			std::cout << "uhoh nomove" << std::endl;
+			exit(1);
 			break;
 	}
 }

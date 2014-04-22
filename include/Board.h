@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 #include <memory>
+#include <iostream>
 
 #include "Defs.h"
 #include "Response.h"
@@ -37,9 +38,8 @@ class Board
 		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
 		static const constexpr char* printString[12] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048"};
 
-		std::vector<std::vector<U8>>* history_ = new std::vector<std::vector<U8>>;
-		std::vector<std::vector<U8>>& history = *history_;
-		U8* board;
+		std::vector<std::vector<U8>> history = {std::vector<U8>(16)};
+		U8* board = &history.back()[0];
 
 		std::vector<U8> getEmptySquares();
 		U8 getHighestTile();
@@ -68,19 +68,18 @@ class Board
 		bool isFull();
 		bool areNoMerges();
 	public:
-		Board() : engine(std::mt19937(seed__)), tileDistribution(std::uniform_int_distribution<U8>(0_U8, 9_U8)) { history.push_back(std::vector<U8>(16)); updateBoardPointer(); respond(); respond(); }
-		~Board() { delete history_; }
+		Board() : engine(std::mt19937(seed__)), tileDistribution(std::uniform_int_distribution<U8>(0, 9)) { respond(); respond(); }
 
 		static inline constexpr U8 getSqIndex(U8 row, U8 col) { return (col * 4) + row; }
 
 		void move(Move move);
 		inline bool wasPreviousMoveIllegal() { return isEqual(getPreviousBoard(), board); }
 
-		inline void unMove() { history.pop_back(); updateBoardPointer(); }
+		inline void unMove() { history.pop_back(); updateBoardPointer();}
 
 		inline S32 evaluate() { return getEmptySquares().size() * 128 + getHighestTile(); }
-		inline bool isDead() { return isFull() && areNoMerges(); }
-		inline bool isWon() { return getHighestTile() >= 12; }
+		inline bool isDead() { return (isFull() && areNoMerges()); }
+		inline bool isWon() { return (getHighestTile() >= 11); }
 		inline U64 movesMade() { return history.size() - 1; }
 
 		void unRespond(Response response);
