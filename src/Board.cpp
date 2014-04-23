@@ -29,26 +29,32 @@ U8 Board::getHighestTile()
 
 void Board::moveUp()
 {
-	for (U8 sq = A1; sq < D1; sq++)
-		moveIfAble(sq, sq + 4);
+	for (U8 bsq = D4; bsq > C4; bsq--)
+	{
+		for (U8 sq = bsq; sq > A4; sq -= 4)
+			moveIfAble(sq - 4, sq);
 
-	for (U8 sq = A1; sq < D1; sq++)
-		mergeIfAbleAA(sq, sq + 4, sq, 1);
+		for (U8 sq = bsq; sq > A4; sq -= 4)
+			mergeIfAbleAA(sq - 4, sq, sq, -4);
 
-	for (U8 sq = A1; sq < D1; sq++)
-		moveIfAble(sq, sq + 4);
+		for (U8 sq = bsq; sq > A4; sq -= 4)
+			moveIfAble(sq - 4, sq);
+	}
 }
 
 void Board::moveDown()
 {
-	for (U8 sq = D4; sq > A4; sq--)
-		moveIfAble(sq, sq - 4);
+	for (U8 bsq = A1; bsq < B1; bsq++)
+	{
+		for (U8 sq = bsq; sq < D4; sq += 4)
+			moveIfAble(sq + 4, sq);
 
-	for (U8 sq = D4; sq > A4; sq--)
-		mergeIfAbleAA(sq, sq - 4, sq, -1);
+		for (U8 sq = bsq; sq < D4; sq += 4)
+			mergeIfAbleAA(sq + 4, sq, sq, -4);
 
-	for (U8 sq = D4; sq > A4; sq--)
-		moveIfAble(sq, sq - 4);
+		for (U8 sq = bsq; sq < D4; sq += 4)
+			moveIfAble(sq + 4, sq);
+	}
 }
 
 void Board::moveLeft()
@@ -133,9 +139,17 @@ void Board::move(Move move)
 	updateBoardPointer();
 }
 
-float Board::getAverageTile()
+float Board::getAverageTileValue()
 {
+	U32 sum = 0;
+	U8 div = 0;
+	for (U8 x = 0; x < 16; x++)
+	{
+		sum += board[x];
+		div += board[x] != 0;
+	}
 
+	return (float) sum / (float) div;
 }
 
 float Board::evaluate()
@@ -176,9 +190,9 @@ float Board::evaluate()
 		}
 	}
 
-	adjBonus /= 10;
+	adjBonus /= 4;
 
-	return adjBonus + (getEmptySquares().size() * getHighestTile());
+	return adjBonus + (getEmptySquares().size() * 4096) + getAverageTileValue();
 }
 
 bool Board::isFull()

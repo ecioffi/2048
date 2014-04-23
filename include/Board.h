@@ -75,7 +75,8 @@ class Board
 
 		std::vector<U8> getEmptySquares();
 		U8 getHighestTile();
-		float getAverageTile();
+		inline U32 getHighestTileValue() { return 1 << getHighestTile(); }
+		float getAverageTileValue();
 
 		void move(Move move);
 		// inline U16 evaluate() { return getEmptySquares().size() * (1 << getHighestTile()); }
