@@ -1,6 +1,7 @@
-#include <Board.h>
-
+#include <cmath>
 #include <iostream>
+
+#include <Board.h>
 
 const constexpr char* Board::printString[12];
 const constexpr U8 Board::newTile[10];
@@ -55,13 +56,13 @@ void Board::moveLeft()
 	for (U8 bsq = A1; bsq < D4; bsq += 4)
 	{
 		for (U8 sq = bsq; sq < bsq + 3; sq++)
-			moveIfAble(sq, sq + 1);
+			moveIfAble(sq + 1, sq);
 
 		for (U8 sq = bsq; sq < bsq + 3; sq++)
 			mergeIfAbleAA(sq + 1, sq, sq, 1);
 
 		for (U8 sq = bsq; sq < bsq + 3; sq++)
-			moveIfAble(sq, sq + 1);
+			moveIfAble(sq + 1, sq);
 	}
 }
 
@@ -78,37 +79,6 @@ void Board::moveRight()
 		for (U8 sq = bsq; sq > bsq - 3; sq--)
 			moveIfAble(sq - 1, sq);
 	}
-}
-
-std::vector<Response> Board::getAllResponses()
-{
-	std::vector<Response> responses;
-	std::vector<U8> emptySquares = getEmptySquares();
-	responses.reserve(emptySquares.size() * 2);
-
-	for (U8 sq : emptySquares)
-	{
-		responses.push_back(Response(1, sq));
-		responses.push_back(Response(2, sq));
-	}
-
-	return responses;
-}
-
-void Board::respond(Response response)
-{
-	board[response.getSquare()] = response.getTile();
-}
-
-void Board::unRespond(Response response)
-{
-	board[response.getSquare()] = 0;
-}
-
-void Board::respond()
-{
-	std::vector<U8> emptySquares = getEmptySquares();
-	board[emptySquares[distribution(engine) % emptySquares.size()]] = getNewTile();
 }
 
 void Board::doMove(Move move)
@@ -134,17 +104,81 @@ void Board::doMove(Move move)
 	}
 }
 
-void Board::moveNR(Move move)
+std::vector<Response> Board::getAllResponses()
 {
-	history.push_back(history.back());
-	updateBoardPointer();
-	doMove(move);
+	std::vector<Response> responses;
+	std::vector<U8> emptySquares = getEmptySquares();
+	responses.reserve(emptySquares.size() * 2);
+
+	for (U8 sq : emptySquares)
+	{
+		responses.push_back(Response(1, sq, 0.9 / emptySquares.size()));
+		responses.push_back(Response(2, sq, 0.1 / emptySquares.size()));
+	}
+
+	return responses;
+}
+
+void Board::respond()
+{
+	std::vector<U8> emptySquares = getEmptySquares();
+	board[emptySquares[distribution(engine) % emptySquares.size()]] = getNewTile();
 }
 
 void Board::move(Move move)
 {
-	moveNR(move);
+	doMove(move);
 	respond();
+	history = {history.back()};
+	updateBoardPointer();
+}
+
+float Board::getAverageTile()
+{
+
+}
+
+float Board::evaluate()
+{
+	float adjBonus = 0;
+
+	//up
+	for (U8 sq = A1; sq < D1; sq++)
+	{
+		adjBonus += (abs((S8) board[sq] - (S8) board[sq + 4]) == 1) * (1 << std::max(board[sq], board[sq + 4])) * (std::max(board[sq], board[sq + 4]) != 1);
+		adjBonus += (board[sq] == board[sq + 4]) * (1 << board[sq]) * (board[sq] != 0);
+	}
+
+	//down
+	for (U8 sq = D4; sq > A4; sq--)
+	{
+		adjBonus += (abs((S8) board[sq] - (S8) board[sq - 4]) == 1) * (1 << std::max(board[sq], board[sq - 4])) * (std::max(board[sq], board[sq - 4]) != 1);
+		adjBonus += (board[sq] == board[sq - 4]) * (1 << board[sq]) * (board[sq] != 0);
+	}
+
+	//left
+	for (U8 bsq = A1; bsq < D4; bsq += 4)
+	{
+		for (U8 sq = bsq; sq < bsq + 3; sq++)
+		{
+			adjBonus += (abs((S8) board[sq] - (S8) board[sq + 1]) == 1) * (1 << std::max(board[sq], board[sq + 1])) * (std::max(board[sq], board[sq + 1]) != 1);
+			adjBonus += (board[sq] == board[sq + 1]) * (1 << board[sq]) * (board[sq] != 0);
+		}
+	}
+
+	//right
+	for (U8 bsq = D4; bsq < NO_SQ; bsq -= 4)
+	{
+		for (U8 sq = bsq; sq > bsq - 3; sq--)
+		{
+			adjBonus += (abs((S8) board[sq] - (S8) board[sq - 1]) == 1) * (1 << std::max(board[sq], board[sq - 1])) * (std::max(board[sq], board[sq - 1]) != 1);
+			adjBonus += (board[sq] == board[sq - 1]) * (1 << board[sq]) * (board[sq] != 0);
+		}
+	}
+
+	adjBonus /= 10;
+
+	return adjBonus + (getEmptySquares().size() * getHighestTile());
 }
 
 bool Board::isFull()

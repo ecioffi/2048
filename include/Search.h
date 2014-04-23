@@ -10,12 +10,11 @@ class Search
 {
 	private:
 		Board& board;
-
 		U64 nodes;
 
-		S32 EvNode(S8 depth);
-		S32 maxNode(S8 depth);
-		Move EvMax(S8 depth);
+		float EvNode(U8 depth);
+		float maxNode(U8 depth);
+		Move EvMax(U8 depth);
 	public:
 		Search(Board& board) : board(board) { }
 

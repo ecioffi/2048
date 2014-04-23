@@ -1,75 +1,69 @@
 #include <chrono>
+#include <cfloat>
 #include <iostream>
 
 #include "Search.h"
 #include "Board.h"
 
-S32 Search::EvNode(S8 depth)
+static const constexpr float mm[2] = {FLT_MIN, FLT_MAX};
+
+float Search::EvNode(U8 depth)
 {
-	if (depth <= 0 && !board.isDead())
+	if (board.isDead() || board.isWon())
+	{
+		return mm[board.isWon()];
+	}
+	else if (depth == 0)
 	{
 		return board.evaluate();
 	}
-	else if (board.isDead())
-	{
-		return S32_MIN;
-	}
-	else if (board.isWon())
-	{
-		return S32_MAX;
-	}
 
-	S32 score = 0;
-
+	float score = 0;
 	for (Response response : board.getAllResponses())
 	{
 		nodes++;
-		float probability = response.getProbability(board);
 
 		board.respond(response);
-		score += probability * maxNode(depth - 1);
+		score += response.probability * maxNode(depth - 1);
 		board.unRespond(response);
 	}
 
 	return score;
 }
 
-S32 Search::maxNode(S8 depth)
+float Search::maxNode(U8 depth)
 {
-	if (depth <= 0 && !board.isDead())
+	if (board.isDead() || board.isWon())
+	{
+		return mm[board.isWon()];
+	}
+	else if (depth == 0)
 	{
 		return board.evaluate();
 	}
-	else if (board.isDead())
-	{
-		return S32_MIN;
-	}
-	else if (board.isWon())
-	{
-		return S32_MAX;
-	}
 
-	S32 bestScore = S32_MIN;
+	float bestScore = FLT_MIN;
 	for (Move move : allMoves)
 	{
 		nodes++;
 		board.moveNR(move);
 		if (board.wasPreviousMoveIllegal())
 		{
-			board.unMove();
+			board.unMoveNR();
 			continue;
 		}
 		bestScore = std::max(bestScore, EvNode(depth - 1));
-		board.unMove();
+		board.unMoveNR();
 	}
 
 	return bestScore;
 }
 
-Move Search::EvMax(S8 depth)
+Move Search::EvMax(U8 depth)
 {
+	board.history.reserve(board.history.size() + depth);
 	Move bestMove = Move::NoMove;
-	S32 bestScore = S32_MIN;
+	float bestScore = FLT_MIN;
 
 	for (Move move : allMoves)
 	{
@@ -77,17 +71,17 @@ Move Search::EvMax(S8 depth)
 		board.moveNR(move);
 		if (board.wasPreviousMoveIllegal())
 		{
-			board.unMove();
+			board.unMoveNR();
 			continue;
 		}
 
-		S32 score = EvNode(depth - 1);
+		float score = EvNode(depth - 1);
 		if (score > bestScore)
 		{
 			bestScore = score;
 			bestMove = move;
 		}
-		board.unMove();
+		board.unMoveNR();
 	}
 
 	return bestMove;
@@ -96,13 +90,13 @@ Move Search::EvMax(S8 depth)
 Move Search::getBestMove(U8 depth)
 {
 	nodes = 0;
-	//std::chrono::time_point<std::chrono::system_clock> start, end;
+	std::chrono::time_point<std::chrono::system_clock> start, end;
 
-	//start = std::chrono::system_clock::now();
-	Move bestMove = EvMax(depth);
-	//end = std::chrono::system_clock::now();
+	start = std::chrono::system_clock::now();
+	Move bestMove = EvMax(std::max(1_U8, depth));
+	end = std::chrono::system_clock::now();
 
-	//U64 msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-	//std::cout << (double) nodes / msecs << " KN/s" << std::endl;
+	U64 msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+	std::cout << (double) nodes / msecs << " KN/s" << std::endl;
 	return bestMove;
 }
