@@ -1,6 +1,5 @@
 #ifndef SEARCH_H_
 #define SEARCH_H_
-
 #include "Defs.h"
 
 class Board;

@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <Board.h>
+#include <set>
 
 const constexpr char* Board::printString[12];
 const constexpr U8 Board::newTile[10];
@@ -42,16 +43,16 @@ std::array<std::array<MoveResult, 256>, 2> Board::getMoveResultsLR()
 
 U8 Board::getNextFullRSq(U8 row, U8 start, U8 stop, U8 inc)
 {
-	for (U8 sq = start; sq != stop; sq += inc)
-		if (isRSqEmpty(row, sq))
+	for (U8 sq = start; sq != (stop + inc); sq += inc)
+		if (isRSqFull(row, sq))
 			return sq;
 	return start;
 }
 
 U8 Board::getNextEmptyRSq(U8 row, U8 start, U8 stop, U8 inc)
 {
-	for (U8 sq = start; sq != stop; sq += inc)
-		if (isRSqFull(row, sq))
+	for (U8 sq = start; sq != (stop + inc); sq += inc)
+		if (isRSqEmpty(row, sq))
 			return sq;
 	return start;
 }
@@ -59,23 +60,36 @@ U8 Board::getNextEmptyRSq(U8 row, U8 start, U8 stop, U8 inc)
 MoveResult Board::moveRight(U8 row)
 {
 	U8 mergeBits = 0;
-	for (U8 sq = 0; sq < 3; sq++)
-		if (isRSqEmpty(row, sq))
-			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 4, 1)));
-
-	for (U8 sq = 4; sq > 0; sq--)
+	for (U8 sq = 3; sq > 0; sq--)
 	{
-		if (getRSqValue(row, sq) == getRSqValue(row, sq - 1))
+		if (isRSqEmpty(row, sq))
 		{
-			setRSqValue(row, sq, 0);
+			const U8 sSq = getNextFullRSq(row, sq, 0, -1);
+			setRSqValue(row, sq, getRSqValue(row, sSq));
+			setRSqValue(row, sSq, 0);
+		}
+	}
+
+	for (S8 sq = 3; sq > 0; sq--)
+	{
+		if (getRSqValue(row, sq) == getRSqValue(row, sq - 1) && getRSqValue(row, sq) != 0)
+		{
+			setRSqValue(row, sq - 1, 0);
 			mergeBits |= 1 << sq;
+			sq--;
 		}
 
 	}
 
-	for (U8 sq = 0; sq < 3; sq++)
+	for (U8 sq = 3; sq > 0; sq--)
+	{
 		if (isRSqEmpty(row, sq))
-			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 4, 1)));
+		{
+			const U8 sSq = getNextFullRSq(row, sq, 0, -1);
+			setRSqValue(row, sq, getRSqValue(row, sSq));
+			setRSqValue(row, sSq, 0);
+		}
+	}
 
 	return {row, mergeBits};
 }
@@ -83,23 +97,36 @@ MoveResult Board::moveRight(U8 row)
 MoveResult Board::moveLeft(U8 row)
 {
 	U8 mergeBits = 0;
-	for (U8 sq = 4; sq > 0; sq--)
+	for (U8 sq = 0; sq < 3; sq++)
+	{
 		if (isRSqEmpty(row, sq))
-			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 0, -1)));
+		{
+			const U8 sSq = getNextFullRSq(row, sq, 4, 1);
+			setRSqValue(row, sq, getRSqValue(row, sSq));
+			setRSqValue(row, sSq, 0);
+		}
+	}
 
 	for (U8 sq = 0; sq < 3; sq++)
 	{
-		if (getRSqValue(row, sq) == getRSqValue(row, sq + 1))
+		if (getRSqValue(row, sq) == getRSqValue(row, sq + 1) && getRSqValue(row, sq) != 0)
 		{
-			setRSqValue(row, sq, 0);
+			setRSqValue(row, sq + 1, 0);
 			mergeBits |= 1 << sq;
+			sq++;
 		}
 
 	}
 
-	for (U8 sq = 4; sq > 0; sq--)
+	for (U8 sq = 0; sq < 3; sq++)
+	{
 		if (isRSqEmpty(row, sq))
-			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 0, -1)));
+		{
+			const U8 sSq = getNextFullRSq(row, sq, 4, 1);
+			setRSqValue(row, sq, getRSqValue(row, sSq));
+			setRSqValue(row, sSq, 0);
+		}
+	}
 
 	return {row, mergeBits};
 }
@@ -108,28 +135,35 @@ void Board::doMove(Move move)
 {
 	if ((U8) move > (U8) Move::Right)
 	{
-
+		move = (Move) ((U8) move - 2);
+		for (U8 x = 0; x < 4; x++)
+		{
+			std::set<U8> tiles;
+			U8 row = 0;
+			tiles.insert(0);
+			for (U8 sq = 0; sq < 4; sq++)
+			{
+				tiles.insert(board[getSqIndex(x, sq)]);
+				setRSqValue(row, sq, std::distance(tiles.begin(), tiles.find(board[getSqIndex(x, sq)])));
+			}
+			for (U8 sq = 0; sq < 4; sq++)
+				board[getSqIndex(x, sq)] = *std::next(tiles.begin(), getRSqValue(moveResultsLR[(U8) move][row].row, sq)) + ((moveResultsLR[(U8) move][row].mergeBits >> sq) & 1);
+		}
 	}
 	else
 	{
 		for (U8 y = 0; y < 4; y++)
 		{
-			std::array<U8, 4> tileKey;
-			std::array<U8, winTile> tileCode;
-			U8 tileKeyIndex = 1;
+			std::set<U8> tiles;
 			U8 row = 0;
-			std::array<U8, 4> target;
+			tiles.insert(0);
 			for (U8 sq = 0; sq < 4; sq++)
 			{
-				target[sq] = y + sq;
-				if (board[getSqIndex(sq, y)] != 0 && tileCode[board[getSqIndex(sq, y)]] == 0)
-				{
-					tileCode[board[getSqIndex(sq, y)]] = tileKeyIndex;
-					tileKey[tileKeyIndex] = board[getSqIndex(sq, y)];
-				}
-				setRSqValue(row, sq, tileCode[board[getSqIndex(sq, y)]]);
+				tiles.insert(board[getSqIndex(sq, y)]);
+				setRSqValue(row, sq, std::distance(tiles.begin(), tiles.find(board[getSqIndex(sq, y)])));
 			}
-			applyMoveResult(target, moveResultsLR[(U8) move][row], tileKey);
+			for (U8 sq = 0; sq < 4; sq++)
+				board[getSqIndex(sq, y)] = *std::next(tiles.begin(), getRSqValue(moveResultsLR[(U8) move][row].row, sq)) + ((moveResultsLR[(U8) move][row].mergeBits >> sq) & 1);
 		}
 	}
 }
@@ -255,23 +289,23 @@ bool Board::areNoMerges()
 
 void Board::test()
 {
+		board[A1] = 2;
+		board[B1] = 2;
+		board[C1] = 2;
+		board[D1] = 0;
+
+		print();
+		doMove(Move::Up);
+		print();
+
 //	board[A1] = 2;
-//	board[B1] = 2;
-//	board[C1] = 2;
-//	board[D1] = 0;
+//	board[A2] = 2;
+//	board[A3] = 0;
+//	board[A4] = 2;
 //
 //	print();
-//	doMove(Move::Up);
+//	doMove(Move::Left);
 //	print();
-
-			board[A1] = 2;
-			board[A2] = 2;
-			board[A3] = 0;
-			board[A4] = 2;
-
-			print();
-			doMove(Move::Left);
-			print();
 }
 
 void Board::print()

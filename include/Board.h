@@ -10,15 +10,15 @@
 #include "Defs.h"
 #include "Response.h"
 
-enum class Move : U8 {Left, Right, Up, Down, NoMove};
+enum class Move : U8 {Right, Left, Up, Down, NoMove};
 enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO_SQ};
 
-static const constexpr Move allMoves[4] = {Move::Left, Move::Right, Move::Up, Move::Down};
+static const constexpr Move allMoves[4] = {Move::Right, Move::Left, Move::Up, Move::Down};
 static const constexpr U8 maxDepth = 10;
 static const constexpr U8 winTile = 11;
 
 
-//#define useStaleSeed__
+#define useStaleSeed__
 
 #ifdef useStaleSeed__
 #define seed__ 33
@@ -61,18 +61,17 @@ class Board {
 
 		std::array<std::array<MoveResult, 256>, 2> getMoveResultsLR();
 
-		inline static const constexpr U8 getRSqMask(U8 sq) { return 3 << sq; }
-		inline static const constexpr bool isRSqEmpty(U8 row, U8 sq) { return (row & getRSqMask(sq)); }
-		inline static const constexpr bool isRSqFull(U8 row, U8 sq) { return !(row & getRSqMask(sq)); }
-		inline static const constexpr U8 getRSqValue(U8 row, U8 sq) { return (row & getRSqMask(sq)) >> sq; }
-		inline static void setRSqValue(U8& row, U8 sq, U8 value) { row = (row & ~getRSqMask(sq)) | (value << sq); }
+		inline static const constexpr U8 getRSqMask(U8 sq) { return 3 << (sq * 2); }
+		inline static const constexpr bool isRSqEmpty(U8 row, U8 sq) { return (row & getRSqMask(sq)) == 0; }
+		inline static const constexpr bool isRSqFull(U8 row, U8 sq) { return (row & getRSqMask(sq)) != 0; }
+		inline static const constexpr U8 getRSqValue(U8 row, U8 sq) { return (row & getRSqMask(sq)) >> (sq * 2); }
+		inline static void setRSqValue(U8& row, U8 sq, U8 value) { row = (row & ~getRSqMask(sq)) | (value << (sq * 2)); }
 		U8 getNextFullRSq(U8 row, U8 sq, U8 stop, U8 inc);
 		U8 getNextEmptyRSq(U8 row, U8 sq, U8 stop, U8 inc);
 
 		MoveResult moveRight(U8 row);
 		MoveResult moveLeft(U8 row);
 
-		inline void applyMoveResult(std::array<U8, 4> target, MoveResult result, std::array<U8, 4> tileKey) { for (U8 sq : {0,1,2,3}) { board[target[sq]] = tileKey[getRSqValue(result.row, sq)] + ((result.mergeBits >> sq) & 1); } }
 		void doMove(Move move);
 
 		//inline void updateBoardPointer() { board = &history[depth][0]; }
