@@ -61,7 +61,6 @@ float Search::maxNode(U8 depth)
 
 Move Search::EvMax(U8 depth)
 {
-	board.history.reserve(board.history.size() + depth);
 	Move bestMove = Move::NoMove;
 	float bestScore = FLT_MIN;
 
@@ -93,7 +92,7 @@ Move Search::getBestMove(U8 depth)
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 
 	start = std::chrono::system_clock::now();
-	Move bestMove = EvMax(std::max(1_U8, depth));
+	Move bestMove = EvMax(std::min(std::max(1_U8, depth), maxDepth));
 	end = std::chrono::system_clock::now();
 
 	U64 msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

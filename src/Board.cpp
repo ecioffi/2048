@@ -27,86 +27,110 @@ U8 Board::getHighestTile()
 	return highestTile;
 }
 
-void Board::moveUp()
+std::array<std::array<MoveResult, 256>, 2> Board::getMoveResultsLR()
 {
-	for (U8 bsq = D4; bsq > C4; bsq--)
+	std::array<std::array<MoveResult, 256>, 2> moveResults;
+
+	for (U8 row = 1; row > 0; row++)
 	{
-		for (U8 sq = bsq; sq > A4; sq -= 4)
-			moveIfAble(sq - 4, sq);
-
-		for (U8 sq = bsq; sq > A4; sq -= 4)
-			mergeIfAbleAA(sq - 4, sq, sq, -4);
-
-		for (U8 sq = bsq; sq > A4; sq -= 4)
-			moveIfAble(sq - 4, sq);
+		moveResults[(U8) Move::Right][row] = moveRight(row);
+		moveResults[(U8) Move::Left][row] = moveLeft(row);
 	}
+
+	return moveResults;
 }
 
-void Board::moveDown()
+U8 Board::getNextFullRSq(U8 row, U8 start, U8 stop, U8 inc)
 {
-	for (U8 bsq = A1; bsq < B1; bsq++)
-	{
-		for (U8 sq = bsq; sq < D4; sq += 4)
-			moveIfAble(sq + 4, sq);
-
-		for (U8 sq = bsq; sq < D4; sq += 4)
-			mergeIfAbleAA(sq + 4, sq, sq, -4);
-
-		for (U8 sq = bsq; sq < D4; sq += 4)
-			moveIfAble(sq + 4, sq);
-	}
+	for (U8 sq = start; sq != stop; sq += inc)
+		if (isRSqEmpty(row, sq))
+			return sq;
+	return start;
 }
 
-void Board::moveLeft()
+U8 Board::getNextEmptyRSq(U8 row, U8 start, U8 stop, U8 inc)
 {
-	for (U8 bsq = A1; bsq < D4; bsq += 4)
-	{
-		for (U8 sq = bsq; sq < bsq + 3; sq++)
-			moveIfAble(sq + 1, sq);
-
-		for (U8 sq = bsq; sq < bsq + 3; sq++)
-			mergeIfAbleAA(sq + 1, sq, sq, 1);
-
-		for (U8 sq = bsq; sq < bsq + 3; sq++)
-			moveIfAble(sq + 1, sq);
-	}
+	for (U8 sq = start; sq != stop; sq += inc)
+		if (isRSqFull(row, sq))
+			return sq;
+	return start;
 }
 
-void Board::moveRight()
+MoveResult Board::moveRight(U8 row)
 {
-	for (U8 bsq = D4; bsq < NO_SQ; bsq -= 4)
+	U8 mergeBits = 0;
+	for (U8 sq = 0; sq < 3; sq++)
+		if (isRSqEmpty(row, sq))
+			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 4, 1)));
+
+	for (U8 sq = 4; sq > 0; sq--)
 	{
-		for (U8 sq = bsq; sq > bsq - 3; sq--)
-			moveIfAble(sq - 1, sq);
+		if (getRSqValue(row, sq) == getRSqValue(row, sq - 1))
+		{
+			setRSqValue(row, sq, 0);
+			mergeBits |= 1 << sq;
+		}
 
-		for (U8 sq = bsq; sq > bsq - 3; sq--)
-			mergeIfAbleAA(sq - 1, sq, sq, -1);
-
-		for (U8 sq = bsq; sq > bsq - 3; sq--)
-			moveIfAble(sq - 1, sq);
 	}
+
+	for (U8 sq = 0; sq < 3; sq++)
+		if (isRSqEmpty(row, sq))
+			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 4, 1)));
+
+	return {row, mergeBits};
+}
+
+MoveResult Board::moveLeft(U8 row)
+{
+	U8 mergeBits = 0;
+	for (U8 sq = 4; sq > 0; sq--)
+		if (isRSqEmpty(row, sq))
+			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 0, -1)));
+
+	for (U8 sq = 0; sq < 3; sq++)
+	{
+		if (getRSqValue(row, sq) == getRSqValue(row, sq + 1))
+		{
+			setRSqValue(row, sq, 0);
+			mergeBits |= 1 << sq;
+		}
+
+	}
+
+	for (U8 sq = 4; sq > 0; sq--)
+		if (isRSqEmpty(row, sq))
+			setRSqValue(row, sq, getRSqValue(row, getNextFullRSq(row, sq, 0, -1)));
+
+	return {row, mergeBits};
 }
 
 void Board::doMove(Move move)
 {
-	switch (move)
+	if ((U8) move > (U8) Move::Right)
 	{
-		case Move::Up:
-			moveUp();
-			break;
-		case Move::Down:
-			moveDown();
-			break;
-		case Move::Left:
-			moveLeft();
-			break;
-		case Move::Right:
-			moveRight();
-			break;
-		case Move::NoMove:
-			std::cout << "uhoh nomove" << std::endl;
-			exit(1);
-			break;
+
+	}
+	else
+	{
+		for (U8 y = 0; y < 4; y++)
+		{
+			std::array<U8, 4> tileKey;
+			std::array<U8, winTile> tileCode;
+			U8 tileKeyIndex = 1;
+			U8 row = 0;
+			std::array<U8, 4> target;
+			for (U8 sq = 0; sq < 4; sq++)
+			{
+				target[sq] = y + sq;
+				if (board[getSqIndex(sq, y)] != 0 && tileCode[board[getSqIndex(sq, y)]] == 0)
+				{
+					tileCode[board[getSqIndex(sq, y)]] = tileKeyIndex;
+					tileKey[tileKeyIndex] = board[getSqIndex(sq, y)];
+				}
+				setRSqValue(row, sq, tileCode[board[getSqIndex(sq, y)]]);
+			}
+			applyMoveResult(target, moveResultsLR[(U8) move][row], tileKey);
+		}
 	}
 }
 
@@ -135,8 +159,6 @@ void Board::move(Move move)
 {
 	doMove(move);
 	respond();
-	history = {history.back()};
-	updateBoardPointer();
 }
 
 float Board::getAverageTileValue()
@@ -229,6 +251,27 @@ bool Board::areNoMerges()
 	}
 
 	return true;
+}
+
+void Board::test()
+{
+//	board[A1] = 2;
+//	board[B1] = 2;
+//	board[C1] = 2;
+//	board[D1] = 0;
+//
+//	print();
+//	doMove(Move::Up);
+//	print();
+
+			board[A1] = 2;
+			board[A2] = 2;
+			board[A3] = 0;
+			board[A4] = 2;
+
+			print();
+			doMove(Move::Left);
+			print();
 }
 
 void Board::print()
