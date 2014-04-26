@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 #include <array>
+#include <string>
 
 #include "Defs.h"
 #include "Response.h"
@@ -41,7 +42,7 @@ class Board {
 		std::uniform_int_distribution<U8> distribution;
 
 		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
-		static const constexpr char* printString[12] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048"};
+		static const constexpr char* printString[14] {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
 
 		U8 depth = 0;
 

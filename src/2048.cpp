@@ -16,17 +16,18 @@ int main()
 	Search search(board);
 
 	board.test();
+	search.getBestMove(6);
 
-	U64 num = 0;
-	board.print();
-	while (!(board.isDead() || board.isWon()))
-	{
-		num++;
-		Move move = search.getBestMove(6);
-		//std::cout << num << " : " << getMoveString(move) << std::endl;
-		board.move(move);
-		board.print();
-	}
+//	U64 num = 0;
+//	board.print();
+//	while (!(board.isDead() || board.isWon()))
+//	{
+//		num++;
+//		Move move = search.getBestMove(6);
+//		std::cout << num << " : " << getMoveString(move) << std::endl;
+//		board.move(move);
+//		board.print();
+//	}
 
 	std::cout << (board.isWon() ? "WON" : "DEAD") << std::endl;
 }

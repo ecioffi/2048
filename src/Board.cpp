@@ -4,8 +4,8 @@
 #include <Board.h>
 #include <set>
 
-const constexpr char* Board::printString[12];
 const constexpr U8 Board::newTile[10];
+const constexpr char* Board::printString[14];
 
 std::vector<U8> Board::getEmptySquares()
 {
@@ -306,6 +306,7 @@ void Board::test()
 //	print();
 //	doMove(Move::Left);
 //	print();
+
 }
 
 void Board::print()
