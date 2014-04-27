@@ -16,7 +16,7 @@ enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO
 
 static const constexpr Move allMoves[4] = {Move::Right, Move::Left, Move::Up, Move::Down};
 static const constexpr U8 maxDepth = 10;
-static const constexpr U8 winTile = 11;
+static const constexpr U8 winTile = 13;
 
 
 #define useStaleSeed__
@@ -44,10 +44,10 @@ class Board {
 		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
 		static const constexpr char* printString[14] {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
 
-		U8 depth = 0;
+		//U8 depth = 0;
 
 		const std::array<std::array<MoveResult, 256>, 2> moveResultsLR;
-		std::array<std::array<U8, 16>, maxDepth + 1> history;
+		std::array<std::array<U8, 16>, maxDepth + 1> history = {};
 		Board& board = *this;
 
 		inline U8& operator[](U8 index) { return history[depth][index]; }
@@ -76,16 +76,16 @@ class Board {
 		void doMove(Move move);
 
 		//inline void updateBoardPointer() { board = &history[depth][0]; }
-		inline U8* getPreviousBoard() { return &history[depth - 1][0]; }
+		inline U8* getPreviousBoard() { return history[depth - 1].data(); }
 		inline bool isEqual(U8* boardA, U8* boardB) { return (((U64*) boardA)[0] == ((U64*) boardB)[0]) && (((U64*) boardA)[1] == ((U64*) boardB)[1]); }
 
 //		inline U8 getDepthAI() { return depth++; }
 //		inline void moveNR(Move move) { history[depth + 1] = history[getDepthAI()]; updateBoardPointer(); doMove(move); }
 //		inline void unMoveNR() { depth--; updateBoardPointer();}
 //		inline bool wasPreviousMoveIllegal() { return isEqual(getPreviousBoard(), board); }
-		inline void moveNR(Move move) { depth++; doMove(move); }
+		inline void moveNR(Move move) { history[depth + 1] = history[depth]; depth++; doMove(move); }
 		inline void unMoveNR() { depth--; }
-		inline bool wasPreviousMoveIllegal() { return isEqual(getPreviousBoard(), &board[0]); }
+		inline bool wasPreviousMoveIllegal() { return isEqual(getPreviousBoard(), history[depth].data()); }
 
 		std::vector<Response> getAllResponses();
 		inline void respond(Response response) { board[response.getSquare()] = response.getTile(); }
@@ -96,6 +96,8 @@ class Board {
 		bool isFull();
 		bool areNoMerges();
 	public:
+		U8 depth = 0;
+
 		Board() : engine(seed__), tileDistribution(0, 9), moveResultsLR(getMoveResultsLR()) { respond(); respond(); }
 
 		static inline constexpr U8 getSqIndex(U8 x, U8 y) { return (y * 4) + x; }
