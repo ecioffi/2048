@@ -10,6 +10,7 @@ class Search
 	private:
 		Board& board;
 		U64 nodes;
+		float probability;
 
 		float EvNode(U8 depth);
 		float maxNode(U8 depth);

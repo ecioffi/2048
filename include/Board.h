@@ -15,16 +15,16 @@ enum class Move : U8 {Right, Left, Up, Down, NoMove};
 enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO_SQ};
 
 static const constexpr Move allMoves[4] = {Move::Right, Move::Left, Move::Up, Move::Down};
-static const constexpr U8 maxDepth = 10;
+
+static const constexpr U8 maxDepth = 12;
 static const constexpr U8 winTile = 13;
 
-
-#define useStaleSeed__
+//#define useStaleSeed__
 
 #ifdef useStaleSeed__
-#define seed__ 33
+	#define seed__ 33
 #else
-#define seed__ time(NULL)
+	#define seed__ time(NULL)
 #endif
 
 struct MoveResult {
@@ -42,7 +42,7 @@ class Board {
 		std::uniform_int_distribution<U8> distribution;
 
 		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
-		static const constexpr char* printString[14] {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
+		static const constexpr char* printString[14] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
 
 		//U8 depth = 0;
 
@@ -65,8 +65,10 @@ class Board {
 		inline static const constexpr U8 getRSqMask(U8 sq) { return 3 << (sq * 2); }
 		inline static const constexpr bool isRSqEmpty(U8 row, U8 sq) { return (row & getRSqMask(sq)) == 0; }
 		inline static const constexpr bool isRSqFull(U8 row, U8 sq) { return (row & getRSqMask(sq)) != 0; }
-		inline static const constexpr U8 getRSqValue(U8 row, U8 sq) { return (row & getRSqMask(sq)) >> (sq * 2); }
+		inline static const constexpr U8 getRSqValue(U8 row, U8 sq) { return (row >> (sq * 2)) & 3; }
 		inline static void setRSqValue(U8& row, U8 sq, U8 value) { row = (row & ~getRSqMask(sq)) | (value << (sq * 2)); }
+		inline static void setRSqValueNC(U8& row, U8 sq, U8 value) { row |= (value << (sq * 2)); }
+
 		U8 getNextFullRSq(U8 row, U8 sq, U8 stop, U8 inc);
 		U8 getNextEmptyRSq(U8 row, U8 sq, U8 stop, U8 inc);
 
@@ -111,6 +113,8 @@ class Board {
 		float evaluate();
 		inline bool isDead() { return (isFull() && areNoMerges()); }
 		inline bool isWon() { return (getHighestTile() == winTile); }
+
+		void newGame();
 
 		void test();
 		void print();

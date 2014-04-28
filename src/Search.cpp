@@ -1,19 +1,15 @@
 #include <chrono>
-#include <cfloat>
 #include <iostream>
+#include <cfloat>
 
 #include "Search.h"
 #include "Board.h"
 
-static const constexpr float mm[2] = {FLT_MIN, FLT_MAX};
+static const constexpr float probabilityCutoff = 0.001;
 
 float Search::EvNode(U8 depth)
 {
-	if (board.isDead() || board.isWon())
-	{
-		return mm[board.isWon()];
-	}
-	else if (depth == 0)
+	if (depth == 0)
 	{
 		return board.evaluate();
 	}
@@ -23,9 +19,11 @@ float Search::EvNode(U8 depth)
 	{
 		nodes++;
 
+		probability *= response.probability;
 		board.respond(response);
 		score += response.probability * maxNode(depth - 1);
 		board.unRespond(response);
+		probability /= response.probability;
 	}
 
 	return score;
@@ -33,11 +31,7 @@ float Search::EvNode(U8 depth)
 
 float Search::maxNode(U8 depth)
 {
-	if (board.isDead() || board.isWon())
-	{
-		return mm[board.isWon()];
-	}
-	else if (depth == 0)
+	if (depth == 0 || probability < probabilityCutoff)
 	{
 		return board.evaluate();
 	}
@@ -61,8 +55,11 @@ float Search::maxNode(U8 depth)
 
 Move Search::EvMax(U8 depth)
 {
+	nodes = 0;
+
 	Move bestMove = Move::NoMove;
 	float bestScore = FLT_MIN;
+	probability = 1.0;
 
 	for (Move move : allMoves)
 	{
@@ -88,7 +85,6 @@ Move Search::EvMax(U8 depth)
 
 Move Search::getBestMove(U8 depth)
 {
-	nodes = 0;
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 
 	start = std::chrono::system_clock::now();
