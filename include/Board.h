@@ -4,7 +4,6 @@
 #include <time.h>
 
 #include <random>
-#include <vector>
 #include <array>
 #include <string>
 
@@ -15,6 +14,9 @@ enum class Move : U8 {Right, Left, Up, Down, NoMove};
 enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO_SQ};
 
 static const constexpr Move allMoves[4] = {Move::Right, Move::Left, Move::Up, Move::Down};
+static const constexpr char* moveName[5] = {"Move::Right", "Move::Left", "Move::Up", "Move::Down", "Move::NoMove"};
+
+inline std::string getMoveName(Move move) { return std::string(moveName[(U8) move]); }
 
 static const constexpr U8 maxDepth = 12;
 static const constexpr U8 winTile = 13;
@@ -27,15 +29,24 @@ static const constexpr U8 winTile = 13;
 	#define seed__ time(NULL)
 #endif
 
+struct SquareArray {
+		U8 size = 0;
+		std::array<U8, 16> array;
+
+		inline void pushBack(U8 a) { array[size] = a; size++; }
+
+		inline U8& operator[](U8 index) { return array[index]; }
+		inline const U8& operator[](U8 index) const { return array[index]; }
+};
+
 struct MoveResult {
 		U8 row;
 		U8 mergeBits;
 };
 
-class Board {
-		friend class Search;
-		friend class Response;
-
+class Board
+{
+	friend class Search;
 	private:
 		std::mt19937 engine;
 		std::uniform_int_distribution<U8> tileDistribution;
@@ -44,7 +55,7 @@ class Board {
 		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
 		static const constexpr char* printString[14] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
 
-		//U8 depth = 0;
+		U8 depth = 0;
 
 		const std::array<std::array<MoveResult, 256>, 2> moveResultsLR;
 		std::array<std::array<U8, 16>, maxDepth + 1> history = {};
@@ -53,12 +64,12 @@ class Board {
 		inline U8& operator[](U8 index) { return history[depth][index]; }
 		inline const U8& operator[](U8 index) const { return history[depth][index]; }
 
-		inline bool isEmpty(U8 sq) { return (board[sq] == 0); }
-		inline void moveTile(U8 sSq, U8 tSq) { board[tSq] = board[sSq]; board[sSq] = 0; }
-		inline void moveIfAble(U8 sSq, U8 tSq) { if (isEmpty(tSq)) moveTile(sSq, tSq); }
+//		inline bool isEmpty(U8 sq) { return (board[sq] == 0); }
+//		inline void moveTile(U8 sSq, U8 tSq) { board[tSq] = board[sSq]; board[sSq] = 0; }
+//		inline void moveIfAble(U8 sSq, U8 tSq) { if (isEmpty(tSq)) moveTile(sSq, tSq); }
 		inline bool isMergeable(U8 sSq, U8 tSq) { return ((board[sSq] == board[tSq]) && board[sSq] != 0); }
-		inline void mergeTiles(U8 sSq, U8 tSq) { board[tSq]++; board[sSq] = 0; }
-		inline void mergeIfAbleAA(U8 sSq, U8 tSq, U8& sq, S8 num) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq += num; } }
+//		inline void mergeTiles(U8 sSq, U8 tSq) { board[tSq]++; board[sSq] = 0; }
+//		inline void mergeIfAbleAA(U8 sSq, U8 tSq, U8& sq, S8 num) { if (isMergeable(sSq, tSq)) { mergeTiles(sSq, tSq); sq += num; } }
 
 		std::array<std::array<MoveResult, 256>, 2> getMoveResultsLR();
 
@@ -89,7 +100,7 @@ class Board {
 		inline void unMoveNR() { depth--; }
 		inline bool wasPreviousMoveIllegal() { return isEqual(getPreviousBoard(), history[depth].data()); }
 
-		std::vector<Response> getAllResponses();
+		ResponseArray getAllResponses();
 		inline void respond(Response response) { board[response.getSquare()] = response.getTile(); }
 		inline void unRespond(Response response) { board[response.getSquare()] = 0; }
 		inline U8 getNewTile() { return newTile[tileDistribution(engine)]; }
@@ -98,13 +109,11 @@ class Board {
 		bool isFull();
 		bool areNoMerges();
 	public:
-		U8 depth = 0;
-
 		Board() : engine(seed__), tileDistribution(0, 9), moveResultsLR(getMoveResultsLR()) { respond(); respond(); }
 
 		static inline constexpr U8 getSqIndex(U8 x, U8 y) { return (y * 4) + x; }
 
-		std::vector<U8> getEmptySquares();
+		SquareArray getEmptySquares();
 		U8 getHighestTile();
 		inline U32 getHighestTileValue() { return 1 << getHighestTile(); }
 		float getAverageTileValue();

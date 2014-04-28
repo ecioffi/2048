@@ -6,6 +6,7 @@
 #include "Board.h"
 
 static const constexpr float probabilityCutoff = 0.001;
+static const constexpr float mm[2] = {FLT_MIN, FLT_MAX};
 
 float Search::EvNode(U8 depth)
 {
@@ -13,17 +14,23 @@ float Search::EvNode(U8 depth)
 	{
 		return board.evaluate();
 	}
+	else if (board.isDead() || board.isWon())
+	{
+		return mm[board.isWon()];
+	}
 
 	float score = 0;
-	for (Response response : board.getAllResponses())
+
+	ResponseArray responses = board.getAllResponses();
+	for (U8 i = 0; i < responses.size; i++)
 	{
 		nodes++;
 
-		probability *= response.probability;
-		board.respond(response);
-		score += response.probability * maxNode(depth - 1);
-		board.unRespond(response);
-		probability /= response.probability;
+		probability *= responses[i].probability();
+		board.respond(responses[i]);
+		score += responses[i].probability() * maxNode(depth - 1);
+		board.unRespond(responses[i]);
+		probability /= responses[i].probability();
 	}
 
 	return score;
@@ -34,6 +41,10 @@ float Search::maxNode(U8 depth)
 	if (depth == 0 || probability < probabilityCutoff)
 	{
 		return board.evaluate();
+	}
+	else if (board.isDead() || board.isWon())
+	{
+		return mm[board.isWon()];
 	}
 
 	float bestScore = FLT_MIN;
@@ -72,7 +83,7 @@ Move Search::EvMax(U8 depth)
 		}
 
 		float score = EvNode(depth - 1);
-		if (score > bestScore)
+		if (score >= bestScore)
 		{
 			bestScore = score;
 			bestMove = move;

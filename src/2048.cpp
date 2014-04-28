@@ -2,36 +2,27 @@
 #include "Search.h"
 
 #include <iostream>
-#include <array>
 
 Board board;
 Search search(board);
 
-inline std::string getMoveString(Move& move) // FIXME
+U8 playGame()
 {
-	std::array<std::string, 5> t = {"Move::Right", "Move::Left", "Move::Up", "Move::Down", "Move::NoMove"};
-	return t.at((U8) move);
-}
-
-bool play()
-{
-	if (board.isDead() || board.isWon())
-		board.newGame();
-
-	U64 num = 0;
+	U16 moveNum = 0;
 	board.print();
 	while (!(board.isDead() || board.isWon()))
 	{
-		num++;
-		Move move = search.getBestMove((U8) (num  / 1000) + 6 + (board.getEmptySquares().size() < 4));
-		std::cout << num << " : " << getMoveString(move) << std::endl;
+		moveNum++;
+		Move move = search.getBestMove((U8) (moveNum  / 1000) + 6 + (board.getEmptySquares().size < 4));
+		std::cout << moveNum << " : " << getMoveName(move) << std::endl;
 		board.move(move);
 		board.print();
 	}
 
 	std::cout << (board.isWon() ? "WON" : "DEAD") << std::endl;
-
-	return board.isWon();
+	const U8 highestTile = board.getHighestTile();
+	board.newGame();
+	return highestTile;
 }
 
 void testEngine(U8 rounds)
@@ -39,10 +30,10 @@ void testEngine(U8 rounds)
 	U8 results[winTile] = {};
 	for (U8 x = 0; x < rounds; x++)
 	{
-		play();
+		const U8 highestTile = playGame();
 		for (U8 tileIndex = 0; tileIndex < winTile; tileIndex++)
 		{
-			if (board.getHighestTile() >= (tileIndex + 1))
+			if (highestTile >= (tileIndex + 1))
 				results[tileIndex]++;
 		}
 	}
@@ -56,7 +47,7 @@ void testEngine(U8 rounds)
 
 int main()
 {
-	//	board.test();
+	//board.test();
 
-	testEngine(50);
+	testEngine(10);
 }

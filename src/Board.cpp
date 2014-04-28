@@ -7,16 +7,14 @@
 const constexpr U8 Board::newTile[10];
 const constexpr char* Board::printString[14];
 
-std::vector<U8> Board::getEmptySquares()
+SquareArray Board::getEmptySquares()
 {
-	std::vector<U8> squares;
-	squares.reserve(16);
+	SquareArray squares;
 
 	for (U8 index = 0; index < 16; index++)
 		if (board[index] == 0)
-			squares.push_back(index);
+			squares.pushBack(index);
 
-	squares.shrink_to_fit();
 	return squares;
 }
 
@@ -210,16 +208,15 @@ void Board::doMove(Move move)
 	}
 }
 
-std::vector<Response> Board::getAllResponses()
+ResponseArray Board::getAllResponses()
 {
-	std::vector<U8> emptySquares = getEmptySquares();
-	std::vector<Response> responses;
-	responses.reserve(emptySquares.size() * 2);
+	SquareArray emptySquares = getEmptySquares();
+	ResponseArray responses;
 
-	for (U8 sq : emptySquares)
+	for (U8 index = 0; index < emptySquares.size; index++)
 	{
-		responses.emplace_back(1, sq, 0.9 / emptySquares.size());
-		responses.emplace_back(2, sq, 0.1 / emptySquares.size());
+		responses.pushBack(Response(1, emptySquares[index], 0.9 / emptySquares.size));
+		responses.pushBack(Response(2, emptySquares[index], 0.1 / emptySquares.size));
 	}
 
 	return responses;
@@ -227,8 +224,8 @@ std::vector<Response> Board::getAllResponses()
 
 void Board::respond()
 {
-	std::vector<U8> emptySquares = getEmptySquares();
-	board[emptySquares[distribution(engine) % emptySquares.size()]] = getNewTile();
+	SquareArray emptySquares = getEmptySquares();
+	board[emptySquares[distribution(engine) % emptySquares.size]] = getNewTile();
 }
 
 void Board::move(Move move)
@@ -252,12 +249,6 @@ float Board::getAverageTileValue()
 
 float Board::evaluate()
 {
-	static const constexpr float mm[2] = {FLT_MIN, FLT_MAX};
-	if (isDead() || isWon())
-	{
-		return mm[isWon()];
-	}
-
 	float adjBonus = 0;
 
 	//up
@@ -296,7 +287,7 @@ float Board::evaluate()
 
 	adjBonus /= 2;
 
-	return adjBonus + (getEmptySquares().size() * 4096) + getAverageTileValue();
+	return adjBonus + (getEmptySquares().size * 4096) + getAverageTileValue();
 }
 
 bool Board::isFull()
@@ -337,7 +328,7 @@ bool Board::areNoMerges()
 
 void Board::newGame()
 {
-	history = {};
+	history[0].fill(0);
 	depth = 0;
 	respond();
 	respond();
@@ -354,15 +345,21 @@ void Board::test()
 	//				doMove(Move::Up);
 	//				print();
 
-	board[A1] = 2;
-	board[A2] = 3;
-	board[A3] = 4;
-	board[A4] = 5;
+	//	board[A1] = 3;
+	//	board[A2] = 3;
+	//	board[A3] = 11;
+	//	board[A4] = 1;
+	//
+	//	print();
+	//	moveNR(Move::Right);
+	//	print();
+	//	unMoveNR();
 
-	print();
-	moveNR(Move::Right);
-	print();
-	unMoveNR();
+	history[depth] = {
+			1, 2, 7, 10,
+			3, 3, 11, 1,
+			6, 8, 5, 12,
+			4, 9, 4, 2 };
 }
 
 void Board::print()
