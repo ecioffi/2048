@@ -21,7 +21,7 @@ inline std::string getMoveName(Move move) { return std::string(moveName[(U8) mov
 static const constexpr U8 maxDepth = 12;
 static const constexpr U8 winTile = 13;
 
-//#define useStaleSeed__
+#define useStaleSeed__
 
 #ifdef useStaleSeed__
 	#define seed__ 33
@@ -59,8 +59,9 @@ class Board
 
 		const std::array<std::array<MoveResult, 256>, 2> moveResultsLR;
 		std::array<std::array<U8, 16>, maxDepth + 1> history = {};
-		Board& board = *this;
+		//const constexpr U8* transposedHistory[16] = getTransposed
 
+		Board& board = *this;
 		inline U8& operator[](U8 index) { return history[depth][index]; }
 		inline const U8& operator[](U8 index) const { return history[depth][index]; }
 
@@ -114,12 +115,14 @@ class Board
 		static inline constexpr U8 getSqIndex(U8 x, U8 y) { return (y * 4) + x; }
 
 		SquareArray getEmptySquares();
+		inline U8 getNumberOfEmptySquares() { U8 num = 0; for (U8 sq = 0; sq < 16; sq++) { num += (board[sq] == 0); } return num; }
 		U8 getHighestTile();
 		inline U32 getHighestTileValue() { return 1 << getHighestTile(); }
 		float getAverageTileValue();
 
 		void move(Move move);
-		float evaluate();
+		// float evaluate();
+		inline U32 evaluate() { return getNumberOfEmptySquares(); }
 		inline bool isDead() { return (isFull() && areNoMerges()); }
 		inline bool isWon() { return (getHighestTile() == winTile); }
 

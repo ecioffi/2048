@@ -13,7 +13,8 @@ U8 playGame()
 	while (!(board.isDead() || board.isWon()))
 	{
 		moveNum++;
-		Move move = search.getBestMove((U8) (moveNum  / 1000) + 6 + (board.getEmptySquares().size < 4));
+		// Move move = search.getBestMove((U8) (moveNum  / 1000) + 6 + (board.getEmptySquares().size < 4));
+		Move move = search.getBestMove(6);
 		std::cout << moveNum << " : " << getMoveName(move) << std::endl;
 		board.move(move);
 		board.print();
@@ -25,9 +26,9 @@ U8 playGame()
 	return highestTile;
 }
 
-void testEngine(U8 rounds)
+void testEngine(int rounds)
 {
-	U8 results[winTile] = {};
+	int results[winTile] = {};
 	for (U8 x = 0; x < rounds; x++)
 	{
 		const U8 highestTile = playGame();
@@ -38,10 +39,10 @@ void testEngine(U8 rounds)
 		}
 	}
 
-	std::cout << "\nRESULTS FROM " << (int) rounds << " ROUNDS:\n" << std::endl;
-	for (U8 tileIndex = 0; tileIndex < winTile; tileIndex++)
+	std::cout << "\nRESULTS FROM " << rounds << " ROUNDS:\n" << std::endl;
+	for (int tileIndex = 0; tileIndex < winTile; tileIndex++)
 	{
-		std::cout << (int) (1 << (tileIndex + 1)) << ": " << (int) results[tileIndex] << std::endl;
+		std::cout << (1 << (tileIndex + 1)) << ": " << results[tileIndex] << std::endl;
 	}
 }
 
@@ -49,5 +50,5 @@ int main()
 {
 	//board.test();
 
-	testEngine(10);
+	testEngine(16);
 }
