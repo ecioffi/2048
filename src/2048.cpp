@@ -14,7 +14,7 @@ U8 playGame()
 	{
 		moveNum++;
 		// Move move = search.getBestMove((U8) (moveNum  / 1000) + 6 + (board.getEmptySquares().size < 4));
-		Move move = search.getBestMove(6);
+		Move move = search.getBestMove(8);
 		std::cout << moveNum << " : " << getMoveName(move) << std::endl;
 		board.move(move);
 		board.print();
@@ -49,6 +49,6 @@ void testEngine(int rounds)
 int main()
 {
 	//board.test();
-
-	testEngine(16);
+	playGame();
+	return 0;
 }

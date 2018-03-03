@@ -1,8 +1,6 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
-#include <time.h>
-
 #include <random>
 #include <array>
 #include <string>
@@ -10,24 +8,24 @@
 #include "Defs.h"
 #include "Response.h"
 
-enum class Move : U8 {Right, Left, Up, Down, NoMove};
-enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO_SQ};
-
-static const constexpr Move allMoves[4] = {Move::Right, Move::Left, Move::Up, Move::Down};
-static const constexpr char* moveName[5] = {"Move::Right", "Move::Left", "Move::Up", "Move::Down", "Move::NoMove"};
-
-inline std::string getMoveName(Move move) { return std::string(moveName[(U8) move]); }
-
-static const constexpr U8 maxDepth = 12;
-static const constexpr U8 winTile = 13;
-
 #define useStaleSeed__
 
 #ifdef useStaleSeed__
-	#define seed__ 33
+	static std::mt19937 engine(33);
 #else
-	#define seed__ time(NULL)
+	static std::random_device randomDevice();
+	static std::mt19937 engine(randomDevice());
 #endif
+
+enum class Move : U8 {Right, Left, Up, Down, NoMove};
+enum Sq : U8 {A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4, NO_SQ};
+
+constexpr Move allMoves[4] = {Move::Right, Move::Left, Move::Up, Move::Down};
+constexpr const char* moveName[5] = {"Move::Right", "Move::Left", "Move::Up", "Move::Down", "Move::NoMove"};
+inline std::string getMoveName(Move move) { return std::string(moveName[(U8) move]); }
+
+constexpr U8 maxDepth = 12;
+constexpr U8 winTile = 13;
 
 struct SquareArray {
 		U8 size = 0;
@@ -48,12 +46,9 @@ class Board
 {
 	friend class Search;
 	private:
-		std::mt19937 engine;
 		std::uniform_int_distribution<U8> tileDistribution;
-		std::uniform_int_distribution<U8> distribution;
 
-		static const constexpr U8 newTile[10] = {1, 1, 1, 1, 1, 1, 1, 2, 1, 1};
-		static const constexpr char* printString[14] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
+		static constexpr const char* printString[14] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
 
 		U8 depth = 0;
 
@@ -104,13 +99,13 @@ class Board
 		ResponseArray getAllResponses();
 		inline void respond(Response response) { board[response.getSquare()] = response.getTile(); }
 		inline void unRespond(Response response) { board[response.getSquare()] = 0; }
-		inline U8 getNewTile() { return newTile[tileDistribution(engine)]; }
+		inline U8 getNewTile() { return (tileDistribution(engine) == 0) ? 2 : 1; }
 		void respond();
 
 		bool isFull();
 		bool areNoMerges();
 	public:
-		Board() : engine(seed__), tileDistribution(0, 9), moveResultsLR(getMoveResultsLR()) { respond(); respond(); }
+		Board() : tileDistribution(0, 9), moveResultsLR(getMoveResultsLR()) { respond(); respond(); }
 
 		static inline constexpr U8 getSqIndex(U8 x, U8 y) { return (y * 4) + x; }
 
@@ -121,8 +116,8 @@ class Board
 		float getAverageTileValue();
 
 		void move(Move move);
-		// float evaluate();
-		inline U32 evaluate() { return getNumberOfEmptySquares(); }
+		//float evaluate();
+		inline U8 evaluate() { return getNumberOfEmptySquares(); }
 		inline bool isDead() { return (isFull() && areNoMerges()); }
 		inline bool isWon() { return (getHighestTile() == winTile); }
 

@@ -5,8 +5,10 @@
 #include "Search.h"
 #include "Board.h"
 
-static const constexpr float probabilityCutoff = 0.001;
-static const constexpr float mm[2] = {FLT_MIN, FLT_MAX};
+static constexpr float probabilityCutoff = 0.001;
+static constexpr float mm[2] = {FLT_MIN, FLT_MAX};
+
+
 
 float Search::EvNode(U8 depth)
 {

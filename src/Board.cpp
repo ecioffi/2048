@@ -4,8 +4,7 @@
 #include <Board.h>
 #include <cfloat>
 
-const constexpr U8 Board::newTile[10];
-const constexpr char* Board::printString[14];
+constexpr const char* Board::printString[14];
 
 SquareArray Board::getEmptySquares()
 {
@@ -203,7 +202,7 @@ ResponseArray Board::getAllResponses()
 void Board::respond()
 {
 	SquareArray emptySquares = getEmptySquares();
-	board[emptySquares[distribution(engine) % emptySquares.size]] = getNewTile();
+	board[emptySquares[std::uniform_int_distribution<U8>{0, emptySquares.size - 1}(engine)]] = getNewTile();
 }
 
 void Board::move(Move move)
