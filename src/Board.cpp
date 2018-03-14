@@ -4,7 +4,7 @@
 #include <Board.h>
 #include <cfloat>
 
-constexpr const char* Board::printString[14];
+constexpr const char* Board::printString[];
 
 SquareArray Board::getEmptySquares()
 {
@@ -224,48 +224,51 @@ float Board::getAverageTileValue()
 	return (float) sum / (float) div;
 }
 
-//float Board::evaluate()
-//{
-//	float adjBonus = 0;
-//
-//	//up
-//	for (U8 sq = A1; sq < D1; sq++)
-//	{
-//		//adjBonus += (abs((S8) board[sq] - (S8) board[sq + 4]) == 1) * (1 << std::max(board[sq], board[sq + 4])) * (std::max(board[sq], board[sq + 4]) != 1);
-//		adjBonus += (board[sq] == board[sq + 4]) * (1 << board[sq]) * (board[sq] != 0);
-//	}
-//
-//	//down
-//	for (U8 sq = D4; sq > A4; sq--)
-//	{
-//		//adjBonus += (abs((S8) board[sq] - (S8) board[sq - 4]) == 1) * (1 << std::max(board[sq], board[sq - 4])) * (std::max(board[sq], board[sq - 4]) != 1);
-//		adjBonus += (board[sq] == board[sq - 4]) * (1 << board[sq]) * (board[sq] != 0);
-//	}
-//
-//	//left
-//	for (U8 bsq = A1; bsq < D4; bsq += 4)
-//	{
-//		for (U8 sq = bsq; sq < bsq + 3; sq++)
-//		{
-//			//adjBonus += (abs((S8) board[sq] - (S8) board[sq + 1]) == 1) * (1 << std::max(board[sq], board[sq + 1])) * (std::max(board[sq], board[sq + 1]) != 1);
-//			adjBonus += (board[sq] == board[sq + 1]) * (1 << board[sq]) * (board[sq] != 0);
-//		}
-//	}
-//
-//	//right
-//	for (U8 bsq = D4; bsq < NO_SQ; bsq -= 4)
-//	{
-//		for (U8 sq = bsq; sq > bsq - 3; sq--)
-//		{
-//			//adjBonus += (abs((S8) board[sq] - (S8) board[sq - 1]) == 1) * (1 << std::max(board[sq], board[sq - 1])) * (std::max(board[sq], board[sq - 1]) != 1);
-//			adjBonus += (board[sq] == board[sq - 1]) * (1 << board[sq]) * (board[sq] != 0);
-//		}
-//	}
-//
-//	adjBonus /= 2;
-//
-//	return adjBonus + (getEmptySquares().size * 4096) + getAverageTileValue();
-//}
+float Board::evaluate()
+{
+	float adjBonus = 0;
+
+	//up
+	for (U8 sq = A1; sq < D1; sq++)
+	{
+		//adjBonus += (abs((S8) board[sq] - (S8) board[sq + 4]) == 1) * (1 << std::max(board[sq], board[sq + 4])) * (std::max(board[sq], board[sq + 4]) != 1);
+		adjBonus += (board[sq] == board[sq + 4]) * (1 << board[sq]) * (board[sq] != 0);
+	}
+
+	//down
+	for (U8 sq = D4; sq > A4; sq--)
+	{
+		//adjBonus += (abs((S8) board[sq] - (S8) board[sq - 4]) == 1) * (1 << std::max(board[sq], board[sq - 4])) * (std::max(board[sq], board[sq - 4]) != 1);
+		adjBonus += (board[sq] == board[sq - 4]) * (1 << board[sq]) * (board[sq] != 0);
+	}
+
+	//left
+	for (U8 bsq = A1; bsq < D4; bsq += 4)
+	{
+		for (U8 sq = bsq; sq < bsq + 3; sq++)
+		{
+			//adjBonus += (abs((S8) board[sq] - (S8) board[sq + 1]) == 1) * (1 << std::max(board[sq], board[sq + 1])) * (std::max(board[sq], board[sq + 1]) != 1);
+			adjBonus += (board[sq] == board[sq + 1]) * (1 << board[sq]) * (board[sq] != 0);
+		}
+	}
+
+	//right
+	for (U8 bsq = D4; bsq < NO_SQ; bsq -= 4)
+	{
+		for (U8 sq = bsq; sq > bsq - 3; sq--)
+		{
+			//adjBonus += (abs((S8) board[sq] - (S8) board[sq - 1]) == 1) * (1 << std::max(board[sq], board[sq - 1])) * (std::max(board[sq], board[sq - 1]) != 1);
+			adjBonus += (board[sq] == board[sq - 1]) * (1 << board[sq]) * (board[sq] != 0);
+		}
+	}
+
+	adjBonus /= 2;
+
+	U8 highTile = getHighestTile();
+	float cornerBonus = 2048 * ((board[A1] == highTile) || (board[A4] == highTile) || (board[D1] == highTile) || (board[D4] == highTile)); 
+
+	return adjBonus + cornerBonus + (getEmptySquares().size * 3000);
+}
 
 bool Board::isFull()
 {
@@ -333,10 +336,13 @@ void Board::test()
 	//	unMoveNR();
 
 	history[depth] = {
-			1, 2, 7, 10,
-			3, 3, 11, 1,
-			6, 8, 5, 12,
-			4, 9, 4, 2 };
+			1, 0, 0, 0,
+			1, 0, 0, 0,
+			1, 0, 0, 0,
+			1, 0, 0, 0 };
+
+	print();
+	*((U64*) history[depth].data()) >>=2;
 }
 
 void Board::print()
@@ -345,9 +351,7 @@ void Board::print()
 	{
 		std::cout << "+----+----+----+----+\n";
 		for (U8 row = 0; row < 4; row++)
-		{
 			std::cout << "|" << printString[board[getSqIndex(row, col)]];
-		}
 		std::cout << "|\n";
 	}
 	std::cout << "+----+----+----+----+\n" << std::endl;

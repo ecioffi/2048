@@ -5,10 +5,8 @@
 #include "Search.h"
 #include "Board.h"
 
-static constexpr float probabilityCutoff = 0.001;
+float probabilityCutoff = 0.005;
 static constexpr float mm[2] = {FLT_MIN, FLT_MAX};
-
-
 
 float Search::EvNode(U8 depth)
 {
@@ -16,7 +14,7 @@ float Search::EvNode(U8 depth)
 	{
 		return board.evaluate();
 	}
-	else if (board.isDead() || board.isWon())
+	if (board.isDead() || board.isWon())
 	{
 		return mm[board.isWon()];
 	}
@@ -105,6 +103,7 @@ Move Search::getBestMove(U8 depth)
 	end = std::chrono::system_clock::now();
 
 	U64 msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-	std::cout << (double) nodes / msecs << " KN/s" << std::endl;
+	std::cout << nodes << " Nodes" << std::endl;
+	std::cout << "@ " << (double) nodes / msecs << " KN/s" << std::endl;
 	return bestMove;
 }

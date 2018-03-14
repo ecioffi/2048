@@ -8,12 +8,12 @@
 #include "Defs.h"
 #include "Response.h"
 
-#define useStaleSeed__
+//#define useStaleSeed__
 
 #ifdef useStaleSeed__
 	static std::mt19937 engine(33);
 #else
-	static std::random_device randomDevice();
+	static std::random_device randomDevice;
 	static std::mt19937 engine(randomDevice());
 #endif
 
@@ -25,7 +25,7 @@ constexpr const char* moveName[5] = {"Move::Right", "Move::Left", "Move::Up", "M
 inline std::string getMoveName(Move move) { return std::string(moveName[(U8) move]); }
 
 constexpr U8 maxDepth = 12;
-constexpr U8 winTile = 13;
+constexpr U8 winTile = 14;
 
 struct SquareArray {
 		U8 size = 0;
@@ -48,7 +48,7 @@ class Board
 	private:
 		std::uniform_int_distribution<U8> tileDistribution;
 
-		static constexpr const char* printString[14] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192"};
+		static constexpr const char* printString[] = {"    ", " 2  ", " 4  ", " 8  ", " 16 ", " 32 ", " 64 ", " 128", "256 ", "512 ", "1024", "2048", "4096", "8192", "16.k", "32.k"};
 
 		U8 depth = 0;
 
@@ -116,8 +116,8 @@ class Board
 		float getAverageTileValue();
 
 		void move(Move move);
-		//float evaluate();
-		inline U8 evaluate() { return getNumberOfEmptySquares(); }
+		float evaluate();
+		//inline U8 evaluate() { return getNumberOfEmptySquares(); }
 		inline bool isDead() { return (isFull() && areNoMerges()); }
 		inline bool isWon() { return (getHighestTile() == winTile); }
 

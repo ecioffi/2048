@@ -1,9 +1,17 @@
 #ifndef SEARCH_H_
 #define SEARCH_H_
-#include "Defs.h"
+
+#include "Defs.h"
 
 class Board;
 enum class Move : U8;
+
+struct bestMove {
+	Move move;
+	U8 score;
+	U8 searchDepth;
+	U8 gameDepth;
+};
 
 class Search
 {
@@ -11,6 +19,8 @@ class Search
 		Board& board;
 		U64 nodes;
 		float probability;
+
+
 
 		float EvNode(U8 depth);
 		float maxNode(U8 depth);
